@@ -5,11 +5,11 @@ import dotenv  from 'dotenv'
 
 
 dotenv.config({
-    path:'./env'
+    path:'./.env'
 })
 
 connectDatabase().then(()=>{
-    app.listen(process.env.PORT || 8000 , ()=>{
+    app.listen(process.env.PORT || 8009 , ()=>{
         console.log('port is listening on port : ' ,process.env.PORT);
         
     })
