@@ -1,5 +1,3 @@
-// this is done to manage error
-
 import express from "express";
 
 import cors from "cors";
@@ -24,16 +22,10 @@ app.use(express.static("public"));
 
 app.use(express.urlencoded({ extended: true, limit: "16kb" }));
 
-
 app.use(cookieParser());
-
 
 import router from "./routes/user.routes.js";
 
-
-
-app.use('/api/v1/user' , router);
-
-
+app.use("/api/v1/user", router);
 
 export default app;

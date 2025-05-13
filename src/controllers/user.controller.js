@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { User } from "../models/user.models.js";
 import ApiError from "../utils/ApiError.js";
 import ApiResponse from "../utils/ApiResponse.js";
@@ -153,7 +154,7 @@ const logout = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "User  logout Successfully"));
 });
 
-const someone = asyncHandler(async (req, res) => {
+const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookie.refreshToken || req.body.refreshToken;
 
   if (!incomingRefreshToken) {
@@ -165,7 +166,7 @@ const someone = asyncHandler(async (req, res) => {
     process.env.ACCESS_TOKEN_SECRET
   );
 
-  const user = User.findById(decodedToken?._id);
+  const user = await User.findById(decodedToken?._id);
 
   if (!user) {
     throw new ApiError(400, "invalid refresh token");
@@ -283,6 +284,78 @@ const updateAvatar = asyncHandler(async (req, res) => {
   return res.status(200).json(200, user, "Avatar updated");
 });
 
+const getUserChannelProfile = asyncHandler(async (req, res) => {
+  const { userName } = req.params;
+
+  if (!userName?.trim()) {
+    throw new ApiError(400, "username is missing");
+  }
+
+  const channel = await User.aggregate([
+    {
+      $match: {
+        userName: userName?.toLowerCase(),
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        foreignField: "channel",
+        localField: "_id",
+        as: "subscribers",
+      },
+    },
+    {
+      $lookup: {
+        from: "subscriptions",
+        foreignField: "subscriber",
+        localField: "_id",
+        as: "subscribedTo",
+      },
+    },
+    {
+      $addFields: {
+        subscribersCount: {
+          $size: "$subscribers",
+        },
+        channelsSubscribedToCount: {
+          $size: "$subscribedTo",
+        },
+        isSubscribed: {
+          $cond: {
+            if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+            then: true,
+            else: false,
+          },
+        },
+      },
+    },
+    {
+      $project: {
+        userName: 1,
+        fullName: 1,
+        subscribersCount: 1,
+        channelsSubscribedToCount: 1,
+        avatar: 1,
+        coverImage: 1,
+        isSubscribed: 1,
+        email: 1,
+      },
+    },
+  ]);
+
+  console.log(channel);
+
+  if (!channel?.length) {
+    throw new ApiError(400, "Channel does not exist");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, channel[0], "User channel fetched Successfully")
+    );
+});
 
 const updateCoverImage = asyncHandler(async (req, res) => {
   const CoverImageLocalFilePath = await req.file?.path;
@@ -311,6 +384,61 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 
   return res.status(200).json(200, user, "coverImage updated");
 });
+
+const getWatchHistory = asyncHandler(async (req, res) => {
+  const user = User.aggregate([
+    {
+      $match: {
+        _id: new mongoose.Types.ObjectId(req.user?._id),
+      },
+    },
+    {
+      $lookup: {
+        from: "videos",
+        foreignField: "_id",
+        localField: "watchHistory",
+        as: "watchHistory",
+        // subPipeLine
+        pipeline: [
+          {
+            $lookup: {
+              from: "users",
+              localField: "owner",
+              foreignField: "_id",
+              as: "owner",
+              pipeline: [
+                {
+                  $project: {
+                    fullName: 1,
+                    userName: 1,
+                    avatar: 1,
+                  },
+                },
+                {
+                  owner: {
+                    $first: "$owner",
+                  },
+                },
+              ],
+            },
+            // bahar project karke dekhna hai
+          },
+        ],
+      },
+    },
+  ]);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        user[0].watchHistory,
+        "Watch history fetched successfully"
+      )
+    );
+});
+
 export {
   registerUser,
   login,
@@ -319,5 +447,8 @@ export {
   updateAvatar,
   getCurrentUser,
   updateCoverImage,
-  changePassword
+  changePassword,
+  getUserChannelProfile,
+  refreshAccessToken,
+  getWatchHistory
 };

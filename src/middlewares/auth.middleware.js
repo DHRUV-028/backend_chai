@@ -3,11 +3,11 @@ import  jwt  from "jsonwebtoken";
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 
-const loggedout = asyncHandler(async (req, res, next) => {
+const verifyJwt = asyncHandler(async (req, res, next) => {
   try {
     const token =
       req.cookies?.accessToken ||
-      req.header("Authorizration").replace("Bearer ", "");
+      req.header("Authorization").replace("Bearer ", "");
   
     if (!token) {
       throw new ApiError(400, "Token not found");
@@ -29,4 +29,4 @@ const loggedout = asyncHandler(async (req, res, next) => {
 });
 
 
-export default loggedout;
+export default verifyJwt;
