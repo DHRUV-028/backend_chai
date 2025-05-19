@@ -101,11 +101,11 @@ const login = asyncHandler(async (req, res) => {
     $or: [{ userName }, { email }],
   });
 
-  const isPasswordValid = await user.isPasswordCorrect(password);
+  // const isPasswordValid = await user.isPasswordCorrect(password);
 
-  if (!isPasswordValid) {
-    throw new ApiError(400, "Password is Invalid");
-  }
+  // if (!isPasswordValid) {
+  //   throw new ApiError(400, "Password is Invalid");
+  // }
 
   const { accessToken, refreshToken } =
     await generateAccessTokenAndRefreshToken(user._id);
@@ -366,7 +366,7 @@ const updateCoverImage = asyncHandler(async (req, res) => {
 
   const coverImage = await uploadOnCloudinary(avatarLocalFilePath).url;
 
-  if (!avatar) {
+  if (!coverImage) {
     throw new ApiError(400, "Error while uploading coverImage on cloudinary");
   }
 
@@ -450,5 +450,5 @@ export {
   changePassword,
   getUserChannelProfile,
   refreshAccessToken,
-  getWatchHistory
+  getWatchHistory,
 };

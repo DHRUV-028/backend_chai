@@ -15,9 +15,9 @@ import {
 import { upload } from "../middlewares/multer.middleware.js";
 import verifyJwt from "../middlewares/auth.middleware.js";
 
-const router = Router();
+const userRouter = Router();
 
-router.route("/register").post(
+userRouter.route("/register").post(
   upload.fields([
     {
       name: "avatar",
@@ -31,24 +31,24 @@ router.route("/register").post(
   registerUser
 );
 
-router.route("/login").post(login);
+userRouter.route("/login").post(login);
 
-router.route("/logout").post(verifyJwt, logout);
-router.route("/change-password").post(verifyJwt, changePassword);
-router.route("/current-user").get(verifyJwt, getCurrentUser);
+userRouter.route("/logout").post(verifyJwt, logout);
+userRouter.route("/change-password").post(verifyJwt, changePassword);
+userRouter.route("/current-user").get(verifyJwt, getCurrentUser);
 
 // using patch otherwise it will update all information
-router.route("/update-details").patch(verifyJwt, updateAccountDetails);
-router
+userRouter.route("/update-details").patch(verifyJwt, updateAccountDetails);
+userRouter
   .route("/updateAvatar")
   .patch(verifyJwt, upload.single("avatar"), updateAvatar);
 
-router
+userRouter
   .route("/update-cover-image")
   .patch(verifyJwt, upload.single("cover-image"), updateCoverImage);
 
-router.route("/channel/:userName").get(verifyJwt, getUserChannelProfile);
+userRouter.route("/channel/:userName").get(verifyJwt, getUserChannelProfile);
 
-router.route("/histoy").get(verifyJwt, getWatchHistory);
+userRouter.route("/histoy").get(verifyJwt, getWatchHistory);
 
-export default router;
+export default userRouter;
